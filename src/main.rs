@@ -5,6 +5,8 @@ use axum::{Router, routing::get};
 use crate::{handlers::health_check, state::AppState};
 
 mod handlers;
+mod models;
+mod repositories;
 mod state;
 
 #[tokio::main]
