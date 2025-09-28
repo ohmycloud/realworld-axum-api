@@ -31,5 +31,4 @@ Content-Type: application/json
 ### get current user
 
 GET http://localhost:3000/api/user
-
 Authorization: Token {{token}}

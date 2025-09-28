@@ -13,7 +13,7 @@ pub struct RequireAuth(pub User);
 pub struct OptionalAuth(pub Option<User>);
 
 fn extract_token_from_headers(headers: &HeaderMap) -> Option<String> {
-    let auth_header = headers.get("Authorization")?.to_str().ok()?;
+    let auth_header = headers.get("authorization")?.to_str().ok()?;
 
     if auth_header.starts_with("Token ") {
         Some(auth_header[6..].to_string())
@@ -38,7 +38,7 @@ where
 
         // Validate JWT token
         let jwt_secret =
-            std::env::var("JWT_TOKEN").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+            std::env::var("JWT_SECRET").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
         let claims = validate_token(&token, &jwt_secret).map_err(|_| StatusCode::UNAUTHORIZED)?;
 
