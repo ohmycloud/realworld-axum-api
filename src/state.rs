@@ -1,10 +1,11 @@
+use axum::extract::FromRef;
 use sqlx::PgPool;
 
 use crate::repositories::UserRepository;
 
 // SQLx pools use Arc (atomic reference counting) internally,
 // so cloning just copies a reference, not the entire pool
-#[derive(Clone)]
+#[derive(Clone, FromRef)]
 pub struct AppState {
     pub db_pool: PgPool,
     pub user_repository: UserRepository,
