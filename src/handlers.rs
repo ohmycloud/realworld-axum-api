@@ -9,8 +9,8 @@ pub async fn health_check(State(state): State<AppState>) -> Json<Value> {
     // json!({...}) is a macro that creates a JSON object.
     match sqlx::query("SELECT 1").execute(&state.db_pool).await {
         Ok(_) => Json(json!({
-            "status": "OK",
-            "message": "Server is running"
+            "status": "ok",
+            "database": "connected"
         })),
         Err(err) => {
             eprintln!("Database error: {}", err);
