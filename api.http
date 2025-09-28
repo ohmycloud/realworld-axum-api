@@ -1,2 +1,35 @@
 ### test health_check
 GET http://localhost:3000/health
+
+### register a new user
+POST http://localhost:3000/api/users
+Content-Type: application/json
+
+{
+    "user": {
+        "username": "rakudo",
+        "email": "rakudo@star.org",
+        "password": "password"
+    }
+}
+
+### login a user
+
+# @name login
+POST http://localhost:3000/api/users/login
+Content-Type: application/json
+
+{
+    "user": {
+        "email": "rakudo@star.org",
+        "password": "password"
+    }
+}
+
+@token = {{login.response.body.user.token}}
+
+### get current user
+
+GET http://localhost:3000/api/user
+
+Authorization: Token {{token}}
