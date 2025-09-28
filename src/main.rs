@@ -1,13 +1,14 @@
-use std::env;
-
 use axum::{Router, routing::get};
-
-use crate::{handlers::health_check, state::AppState};
+use std::env;
 
 mod handlers;
 mod models;
 mod repositories;
+mod schemas;
 mod state;
+
+use handlers::health::health_check;
+use state::AppState;
 
 #[tokio::main]
 async fn main() {
