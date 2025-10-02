@@ -2,9 +2,12 @@ use axum::extract::FromRef;
 use sqlx::PgPool;
 use std::sync::Arc;
 
-use crate::repositories::{
-    EmailVerificationRepository, EmailVerificationRepositoryTrait, UserRepository,
-    UserRespositoryTrait,
+use crate::{
+    repositories::{
+        EmailVerificationRepository, EmailVerificationRepositoryTrait, UserRepository,
+        UserRespositoryTrait,
+    },
+    services::EmailService,
 };
 
 // SQLx pools use Arc (atomic reference counting) internally,
@@ -14,6 +17,7 @@ pub struct AppState {
     pub db_pool: PgPool,
     pub user_repository: Arc<dyn UserRespositoryTrait>,
     pub email_verification_repository: Arc<dyn EmailVerificationRepositoryTrait>,
+    pub email_service: Arc<EmailService>,
 }
 
 impl AppState {
@@ -31,10 +35,14 @@ impl AppState {
         let email_verification_repository: Arc<dyn EmailVerificationRepositoryTrait> =
             Arc::new(EmailVerificationRepository::new(db_pool.clone()));
 
+        let email_service =
+            Arc::new(EmailService::new().expect("Failed to initialize email service"));
+
         Ok(Self {
             db_pool,
             user_repository,
             email_verification_repository,
+            email_service,
         })
     }
 }
