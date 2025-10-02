@@ -3,12 +3,22 @@ name = "realworld-axum-api"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+name = "realworld_axum_api"
+path = "src/lib.rs"
+
+[[bin]]
+name = "realworld-axum-api"
+path = "src/main.rs"
+
 [dependencies]
+async-trait = "0.1.89"
 axum = { version = "0.8.4", features = ["macros"] }
 bcrypt = "0.17.1"
 chrono = { version = "0.4.42", features = ["serde"] }
 dotenvy = "0.15.7"
 jsonwebtoken = "9.3.1"
+lettre = { version = "0.11.18", features = ["tokio1-native-tls", "builder", "hostname"] }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 sqlx = { version = "0.8.6", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono", "migrate"] }

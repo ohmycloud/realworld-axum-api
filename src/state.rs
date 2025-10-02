@@ -1,14 +1,15 @@
 use axum::extract::FromRef;
 use sqlx::PgPool;
+use std::sync::Arc;
 
-use crate::repositories::UserRepository;
+use crate::repositories::{UserRepository, UserRespositoryTrait};
 
 // SQLx pools use Arc (atomic reference counting) internally,
 // so cloning just copies a reference, not the entire pool
 #[derive(Clone, FromRef)]
 pub struct AppState {
     pub db_pool: PgPool,
-    pub user_repository: UserRepository,
+    pub user_repository: Arc<dyn UserRespositoryTrait>,
 }
 
 impl AppState {
@@ -19,7 +20,8 @@ impl AppState {
         sqlx::migrate!("./migrations").run(&db_pool).await?;
 
         // Create the user repository
-        let user_repository = UserRepository::new(db_pool.clone());
+        let user_repository: Arc<dyn UserRespositoryTrait> =
+            Arc::new(UserRepository::new(db_pool.clone()));
 
         Ok(Self {
             db_pool,
