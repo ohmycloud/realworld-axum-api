@@ -28,7 +28,7 @@ impl UserRespositoryTrait for UserRepository {
             INSERT INTO users (username, email, password_hash)
             VALUES ($1, $2, $3)
             RETURNING id, username, email, password_hash, bio, image,
-                      created_at, updated_at
+                      email_verified, created_at, updated_at
             "#,
         )
         .bind(username)
@@ -44,7 +44,7 @@ impl UserRespositoryTrait for UserRepository {
         let user = sqlx::query_as::<_, User>(
             r#"
             SELECT id, username, email, password_hash, bio, image,
-                   created_at, updated_at
+                   email_verified, created_at, updated_at
             FROM users
             WHERE id = $1
             "#,
@@ -60,7 +60,7 @@ impl UserRespositoryTrait for UserRepository {
         let user = sqlx::query_as::<_, User>(
             r#"
             SELECT id, username, email, password_hash, bio, image,
-                   created_at, updated_at
+                   email_verified, created_at, updated_at
             FROM users
             WHERE email = $1
             "#,
@@ -76,7 +76,7 @@ impl UserRespositoryTrait for UserRepository {
         let user = sqlx::query_as::<_, User>(
             r#"
             SELECT id, username, email, password_hash, bio, image,
-                   created_at, updated_at
+                   email_verified, created_at, updated_at
             FROM users
             WHERE username = $1
             "#,
@@ -106,7 +106,7 @@ impl UserRespositoryTrait for UserRepository {
                 updated_at = NOW()
             WHERE id = $1
             RETURNING id, username, email, password_hash, bio, image,
-                      created_at, updated_at
+                      email_verified, created_at, updated_at
             "#,
         )
         .bind(id)
