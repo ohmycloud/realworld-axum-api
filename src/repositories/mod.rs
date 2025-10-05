@@ -1,4 +1,5 @@
 mod email_verification_repository;
+mod password_reset_repository;
 mod traits;
 mod user_repository;
 
