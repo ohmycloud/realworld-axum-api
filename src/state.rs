@@ -4,8 +4,8 @@ use std::sync::Arc;
 
 use crate::{
     repositories::{
-        EmailVerificationRepository, EmailVerificationRepositoryTrait, UserRepository,
-        UserRespositoryTrait,
+        EmailVerificationRepository, EmailVerificationRepositoryTrait, PasswordResetRepository,
+        PasswordResetRepositoryTrait, UserRepository, UserRespositoryTrait,
     },
     services::EmailService,
 };
@@ -18,6 +18,7 @@ pub struct AppState {
     pub user_repository: Arc<dyn UserRespositoryTrait>,
     pub email_verification_repository: Arc<dyn EmailVerificationRepositoryTrait>,
     pub email_service: Arc<EmailService>,
+    pub password_reset_repository: Arc<dyn PasswordResetRepositoryTrait>,
 }
 
 impl AppState {
@@ -38,11 +39,15 @@ impl AppState {
         let email_service =
             Arc::new(EmailService::new().expect("Failed to initialize email service"));
 
+        let password_reset_repository: Arc<dyn PasswordResetRepositoryTrait> =
+            Arc::new(PasswordResetRepository::new(db_pool.clone()));
+
         Ok(Self {
             db_pool,
             user_repository,
             email_verification_repository,
             email_service,
+            password_reset_repository,
         })
     }
 }
