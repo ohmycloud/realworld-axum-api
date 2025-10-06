@@ -1,6 +1,9 @@
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use sqlx::prelude::FromRow;
 use uuid::Uuid;
 
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct PasswordResetToken {
     pub id: Uuid,
     pub user_id: Uuid,
