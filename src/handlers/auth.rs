@@ -244,7 +244,7 @@ pub async fn forgot_password(
         })?;
 
     Ok(Json(ForgotPasswordResponse {
-        message: "If that email exists, a password reset link hans been sent".to_string(),
+        message: "If that email exists, a password reset link has been sent".to_string(),
     }))
 }
 

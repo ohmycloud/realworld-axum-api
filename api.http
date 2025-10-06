@@ -32,3 +32,48 @@ Content-Type: application/json
 
 GET http://localhost:3000/api/user
 Authorization: Token {{token}}
+
+### test forgot password
+POST http://localhost:3000/api/auth/forgot-password
+Content-Type: application/json
+
+{
+    "email": "rakudo@star.org"
+}
+
+### test forgot password with non-existent email
+POST http://localhost:3000/api/auth/forgot-password
+Content-Type: application/json
+
+{
+    "email": "doesnotexist@example.com"
+}
+
+### test password reset
+POST http://localhost:3000/api/auth/reset-password
+Content-Type: application/json
+
+{
+    "token": "YOUR_RESET_TOKEN_HERE",
+    "new_password": "newsecurepassword123"
+}
+
+### test login with new password
+POST http://localhost:3000/api/users/login
+Content-Type: application/json
+
+{
+    "user": {
+        "email": "rakudo@star.org",
+        "password": "newsecurepassword123"
+    }
+}
+
+### test expired token
+POST http://localhost:3000/api/auth/reset-password
+Content-Type: application/json
+
+{
+    "token": "EXPIRED_TOKEN",
+    "new_password": "shouldnotwork"
+}

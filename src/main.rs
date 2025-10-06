@@ -6,7 +6,7 @@ use std::env;
 
 use realworld_axum_api::{
     handlers::{
-        auth::{current_user, login, register},
+        auth::{current_user, forgot_password, login, register, reset_password},
         health_check, verify_email,
     },
     state::AppState,
@@ -34,6 +34,8 @@ async fn main() {
         .route("/api/users/login", post(login))
         .route("/api/user", get(current_user))
         .route("/api/auth/verify-email", get(verify_email))
+        .route("/api/auth/forgot-password", post(forgot_password))
+        .route("/api/auth/reset-password", post(reset_password))
         .with_state(app_state);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
