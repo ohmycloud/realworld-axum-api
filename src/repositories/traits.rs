@@ -27,6 +27,12 @@ pub trait UserRespositoryTrait: Send + Sync {
         bio: Option<&str>,
         image: Option<&str>,
     ) -> Result<Option<User>, SqlxError>;
+
+    async fn update_password(
+        &self,
+        user_id: Uuid,
+        new_password_hash: &str,
+    ) -> Result<(), SqlxError>;
 }
 
 #[async_trait]
