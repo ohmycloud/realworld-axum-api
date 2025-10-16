@@ -8,6 +8,7 @@ pub use email_verification_repository::EmailVerificationRepository;
 pub use password_reset_repository::PasswordResetRepository;
 pub use refresh_token_repository::RefreshTokenRepository;
 pub use traits::{
-    EmailVerificationRepositoryTrait, PasswordResetRepositoryTrait, UserRespositoryTrait,
+    EmailVerificationRepositoryTrait, PasswordResetRepositoryTrait, RefreshTokenRepositoryTrait,
+    UserRespositoryTrait,
 };
 pub use user_repository::UserRepository;

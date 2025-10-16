@@ -27,6 +27,13 @@ pub struct LoginUserRequest {
     pub user: LoginUserData,
 }
 
+#[derive(Debug, Serialize)]
+pub struct LoginResponse {
+    pub user: UserData,
+    pub access_token: String,
+    pub refresh_token: String,
+}
+
 #[derive(Debug, Deserialize, Validate)]
 pub struct LoginUserData {
     #[validate(email(message = "Invalid email format"))]
@@ -43,7 +50,6 @@ pub struct UserResponse {
 #[derive(Debug, Serialize)]
 pub struct UserData {
     pub email: String,
-    pub token: String,
     pub username: String,
     pub bio: String,
     pub image: Option<String>,
@@ -51,10 +57,9 @@ pub struct UserData {
 }
 
 impl UserData {
-    pub fn from_user_with_token(user: User, token: String) -> Self {
+    pub fn from_user(user: User) -> Self {
         Self {
             email: user.email,
-            token,
             username: user.username,
             bio: user.bio.unwrap_or_default(),
             image: user.image,

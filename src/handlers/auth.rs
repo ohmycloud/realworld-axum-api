@@ -11,7 +11,6 @@ use validator::Validate;
 
 use crate::{
     auth::{
-        jwt::generate_token,
         middleware::RequireAuth,
         password::{hash_password, verify_password},
     },
@@ -88,14 +87,8 @@ pub async fn register(
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
 
-    // Generate JWT token
-    let jwt_secret = std::env::var("JWT_TOKEN").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    let token =
-        generate_token(&user.id, &jwt_secret).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
     // Build response
-    let user_data = UserData::from_user_with_token(user, token);
+    let user_data = UserData::from_user(user);
     let response = UserResponse { user: user_data };
 
     Ok(Json(response))
@@ -127,14 +120,8 @@ pub async fn login(
         return Err(StatusCode::UNAUTHORIZED);
     }
 
-    // Generate JWT token
-    let jwt_secret = std::env::var("JWT_SECRET").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    let token =
-        generate_token(&user.id, &jwt_secret).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
     // Build response
-    let user_data = UserData::from_user_with_token(user, token);
+    let user_data = UserData::from_user(user);
     let response = UserResponse { user: user_data };
 
     Ok(Json(response))
@@ -143,14 +130,8 @@ pub async fn login(
 pub async fn current_user(
     RequireAuth(user): RequireAuth,
 ) -> Result<Json<UserResponse>, StatusCode> {
-    // Generate fresh JWT token
-    let jwt_secret = std::env::var("JWT_SECRET").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    let token =
-        generate_token(&user.id, &jwt_secret).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
     // Build response
-    let user_data = UserData::from_user_with_token(user, token);
+    let user_data = UserData::from_user(user);
     let response = UserResponse { user: user_data };
 
     Ok(Json(response))
