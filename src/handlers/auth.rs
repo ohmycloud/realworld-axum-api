@@ -11,8 +11,10 @@ use validator::Validate;
 
 use crate::{
     auth::{
+        jwt::generate_token,
         middleware::RequireAuth,
         password::{hash_password, verify_password},
+        tokens::generate_refresh_token,
     },
     schemas::{
         auth_schemas::*,
@@ -97,7 +99,7 @@ pub async fn register(
 pub async fn login(
     State(state): State<AppState>,
     Json(payload): Json<LoginUserRequest>,
-) -> Result<Json<UserResponse>, StatusCode> {
+) -> Result<Json<LoginResponse>, StatusCode> {
     // Validate input
     payload
         .user
@@ -120,9 +122,26 @@ pub async fn login(
         return Err(StatusCode::UNAUTHORIZED);
     }
 
-    // Build response
-    let user_data = UserData::from_user(user);
-    let response = UserResponse { user: user_data };
+    // Generate JWT access token (15 minutes)
+    let jwt_secret = std::env::var("JWT_SECRET").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let access_token =
+        generate_token(&user.id, &jwt_secret).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    // Generate refresh token (UUID, no expiration)
+    let refresh_token = generate_refresh_token();
+
+    // Save refresh token to database
+    state
+        .refresh_token_repository
+        .create_token(user.id, &refresh_token)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // Build response with BOTH tokens
+    let response = LoginResponse {
+        user: UserData::from_user(user),
+        access_token,
+        refresh_token,
+    };
 
     Ok(Json(response))
 }
