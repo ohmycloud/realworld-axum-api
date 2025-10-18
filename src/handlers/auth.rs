@@ -17,6 +17,7 @@ use crate::{
         tokens::generate_refresh_token,
     },
     schemas::{
+        RefreshTokenRequest, RefreshTokenResponse,
         auth_schemas::*,
         password_reset_schemas::{
             ForgotPasswordRequest, ForgotPasswordResponse, ResetPasswordRequest,
@@ -317,4 +318,32 @@ pub async fn reset_password(
         message: "Password has been reset successfully. You can now login with your new password"
             .to_string(),
     }))
+}
+
+pub async fn refresh_token(
+    State(state): State<AppState>,
+    Json(payload): Json<RefreshTokenRequest>,
+) -> Result<Json<RefreshTokenResponse>, StatusCode> {
+    // Lookup the refresh token in database
+    let refresh_token = state
+        .refresh_token_repository
+        .find_by_token(&payload.refresh_token)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+        .ok_or(StatusCode::UNAUTHORIZED)?;
+
+    // Update last_used_at timestamp
+    state
+        .refresh_token_repository
+        .update_last_used(&payload.refresh_token)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // Generate new access token
+    let jwt_secret = std::env::var("JWT_SECRET").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let access_token = generate_token(&refresh_token.user_id, &jwt_secret)
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // Return new access token
+    Ok(Json(RefreshTokenResponse { access_token }))
 }
