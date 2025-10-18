@@ -26,12 +26,25 @@ Content-Type: application/json
     }
 }
 
-@token = {{login.response.body.user.token}}
+@access_token = {{login.response.body.access_token}}
 
 ### get current user
 
 GET http://localhost:3000/api/user
-Authorization: Token {{token}}
+Authorization: Token {{access_token}}
+
+### test refresh token
+
+# @name refresh_token
+POST http://localhost:3000/api/auth/refresh
+Content-Type: application/json
+
+{
+    "refresh_token": "07ba95fb-213f-472b-9f99-1f0aa1f8cdd5"
+}
+
+@access_token = {{refresh_token.response.body.access_token}}
+
 
 ### test forgot password
 POST http://localhost:3000/api/auth/forgot-password

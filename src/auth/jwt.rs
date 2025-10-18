@@ -12,7 +12,7 @@ pub struct Claims {
 
 pub fn generate_token(user_id: &Uuid, secret: &str) -> Result<String, jsonwebtoken::errors::Error> {
     let now = Utc::now();
-    let exp = (now + Duration::minutes(15)).timestamp() as usize;
+    let exp = (now + Duration::minutes(1)).timestamp() as usize;
     let iat = now.timestamp() as usize;
     let claims = Claims {
         sub: user_id.to_string(),
