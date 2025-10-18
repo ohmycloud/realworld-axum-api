@@ -168,9 +168,10 @@ pub async fn login(
 pub async fn current_user(
     RequireAuth(user): RequireAuth,
 ) -> Result<Json<UserResponse>, StatusCode> {
-    // Build response
-    let user_data = UserData::from_user(user);
-    let response = UserResponse { user: user_data };
+    // Build response (no token needed - they already have one)
+    let response = UserResponse {
+        user: UserData::from_user(user),
+    };
 
     Ok(Json(response))
 }
