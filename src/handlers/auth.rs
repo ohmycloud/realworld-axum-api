@@ -30,7 +30,7 @@ use crate::{
 pub async fn register(
     State(state): State<AppState>,
     Json(payload): Json<RegisterUserRequest>,
-) -> Result<Json<UserResponse>, StatusCode> {
+) -> Result<Json<LoginResponse>, StatusCode> {
     // Validate input data
     payload
         .user
@@ -47,6 +47,7 @@ pub async fn register(
     {
         return Err(StatusCode::CONFLICT);
     }
+
     if state
         .user_repository
         .find_by_username(&payload.user.username)
@@ -89,9 +90,27 @@ pub async fn register(
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
 
-    // Build response
-    let user_data = UserData::from_user(user);
-    let response = UserResponse { user: user_data };
+    // Generate JWT access token (15 minutes)
+    let jwt_secret = std::env::var("JWT_SECRET").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let access_token =
+        generate_token(&user.id, &jwt_secret).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // Generate refresh token (UUID, no expiration)
+    let refresh_token = generate_refresh_token();
+
+    // Save refresh token to database
+    state
+        .refresh_token_repository
+        .create_token(user.id, &refresh_token)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // Build response with BOTH tokens
+    let response = LoginResponse {
+        user: UserData::from_user(user),
+        access_token,
+        refresh_token,
+    };
 
     Ok(Json(response))
 }
