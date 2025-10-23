@@ -23,7 +23,7 @@ impl RefreshTokenRepositoryTrait for RefreshTokenRepository {
             r#"
             INSERT INTO refresh_tokens (user_id, token)
             VALUES ($1, $2)
-            RETURNING id, user_id, token, created_at, last_used_at
+            RETURNING id, user_id, token, expires_at, is_used, used_at, created_at, last_used_at
         "#,
         )
         .bind(user_id)
@@ -37,7 +37,7 @@ impl RefreshTokenRepositoryTrait for RefreshTokenRepository {
     async fn find_by_token(&self, token: &str) -> Result<Option<RefreshToken>, sqlx::Error> {
         let refresh_token = sqlx::query_as::<_, RefreshToken>(
             r#"
-            SELECT id, user_id, token, created_at, last_used_at
+            SELECT id, user_id, token, expires_at, is_used, used_at, created_at, last_used_at
             FROM refresh_tokens
             WHERE token = $1
             "#,
@@ -87,6 +87,23 @@ impl RefreshTokenRepositoryTrait for RefreshTokenRepository {
             "#,
         )
         .bind(user_id)
+        .execute(&self.db_pool)
+        .await?;
+
+        Ok(())
+    }
+
+    async fn mark_token_as_used(&self, token: &str) -> Result<(), sqlx::Error> {
+        sqlx::query(
+            r#"
+            UPDATE refresh_tokens
+            SET is_used = TRUE,
+                used_at = $1
+            WHERE token = $2
+            "#,
+        )
+        .bind(Utc::now())
+        .bind(token)
         .execute(&self.db_pool)
         .await?;
 

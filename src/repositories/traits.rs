@@ -83,4 +83,7 @@ pub trait RefreshTokenRepositoryTrait: Send + Sync {
     async fn delete_all_user_tokens(&self, user_id: Uuid) -> Result<(), SqlxError>;
 
     async fn update_last_used(&self, token: &str) -> Result<(), SqlxError>;
+
+    // mark token as used for rotation
+    async fn mark_token_as_used(&self, token: &str) -> Result<(), SqlxError>;
 }
