@@ -17,7 +17,7 @@ use crate::{
         tokens::generate_refresh_token,
     },
     schemas::{
-        RefreshTokenRequest, RefreshTokenResponse,
+        LogoutRequest, LogoutResponse, RefreshTokenRequest, RefreshTokenResponse,
         auth_schemas::*,
         password_reset_schemas::{
             ForgotPasswordRequest, ForgotPasswordResponse, ResetPasswordRequest,
@@ -390,5 +390,21 @@ pub async fn refresh_token(
     Ok(Json(RefreshTokenResponse {
         access_token,
         refresh_token: new_refresh_token,
+    }))
+}
+
+pub async fn logout(
+    State(state): State<AppState>,
+    Json(payload): Json<LogoutRequest>,
+) -> Result<Json<LogoutResponse>, StatusCode> {
+    // simply delete the refresh token from database
+    state
+        .refresh_token_repository
+        .delete_token(&payload.refresh_token)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(Json(LogoutResponse {
+        message: "Logged out successfully".to_string(),
     }))
 }

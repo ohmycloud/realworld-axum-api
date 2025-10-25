@@ -175,4 +175,88 @@ impl EmailService {
 
         Ok(())
     }
+
+    pub async fn send_security_alert(
+        &self,
+        to_email: &str,
+        username: &str,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let html_body = format!(
+            r#"
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <style>
+                            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                            .header {{ background-color: #dc3545; color: white; padding: 20px; text-align: center; }}
+                            .content {{ background-color: #f9f9f9; padding: 30px; border-radius: 5px; margin-top: 20px; }}
+                            .alert-box {{ background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; }}
+                            .action-box {{ background-color: #d1ecf1; border-left: 4px solid #0c5460; padding: 15px; margin: 20px 0; }}
+                            .footer {{ text-align: center; margin-top: 20px; color: #666; font-size: 12px; }}
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            <div class="header">
+                                <h1>Security Alert</h1>
+                            </div>
+                            <div class="content">
+                                <h2>Hi {}!</h2>
+                                <p>We detected suspicious activity on your account.</p>
+
+                                <div class="alert-box">
+                                    <h3>What Happened?</h3>
+                                    <p>Someone attempted to use an old access token that had already been exchanged for a new one.</p>
+                                    <p>This usually means your token was stolen and someone else is trying to access your account.</p>
+                                </div>
+
+                                <div class="action-box">
+                                    <h3>What We Did</h3>
+                                    <ul>
+                                        <li>Blocked the suspicious request</li>
+                                        <li>Logged you out of all devices</li>
+                                        <li>Your account is now secure</li>
+                                    </ul>
+                                </div>
+
+                                <h3>What You Should Do</h3>
+                                <ol>
+                                    <li><strong>Login again</strong> with your password</li>
+                                    <li><strong>Review recent activity</strong> on your account</li>
+                                    <li><strong>Change your password</strong> if you suspect compromise</li>
+                                    <li><strong>Enable 2FA</strong> if available (coming soon!)</li>
+                                </ol>
+
+                                <p><strong>When did this happen?</strong><br>
+                                Just now - we detected and blocked it immediately.</p>
+
+                                <p><strong>What if this wasn't you?</strong><br>
+                                This is expected behavior if you were logged in on multiple devices. However, if you weren't actively using the app, someone may have your token.</p>
+
+                                <p>If you have any questions or concerns, please contact our support team.</p>
+                            </div>
+                            <div class="footer">
+                                <p>© 2024 AxumAPI. All rights reserved.</p>
+                                <p>This is an automated security alert. Please do not reply to this email.</p>
+                            </div>
+                        </div>
+                    </body>
+                    </html>
+                    "#,
+            username
+        );
+
+        let email = Message::builder()
+            .from(self.from_email.clone())
+            .to(to_email.parse()?)
+            .subject("Security Alert: Suspicious Activity Detected")
+            .header(ContentType::TEXT_HTML)
+            .body(html_body)?;
+
+        self.mailer.send(&email)?;
+
+        println!("Security alert sent to {}", to_email);
+        Ok(())
+    }
 }
