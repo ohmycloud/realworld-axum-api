@@ -324,7 +324,7 @@ pub async fn refresh_token(
     State(state): State<AppState>,
     Json(payload): Json<RefreshTokenRequest>,
 ) -> Result<Json<RefreshTokenResponse>, StatusCode> {
-    // Lookup the refresh token in database
+    // lookup the refresh token in database
     let refresh_token = state
         .refresh_token_repository
         .find_by_token(&payload.refresh_token)
@@ -332,18 +332,63 @@ pub async fn refresh_token(
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
         .ok_or(StatusCode::UNAUTHORIZED)?;
 
-    // Update last_used_at timestamp
+    // check if token has expired
+    if refresh_token.is_expired() {
+        // token is expired, delete it and reject
+        let _ = state
+            .refresh_token_repository
+            .delete_token(&payload.refresh_token)
+            .await;
+
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+
+    // reuse detection - Check if token was already used
+    if refresh_token.is_used {
+        // SECURITY BREACH DETECTED!
+        // Someone is trying to use an old token
+        // This means the token was likely stolen
+
+        eprintln!("TOKEN REUSE DETECTED!");
+        eprintln!("Token: {}", &payload.refresh_token);
+        eprintln!("User ID: {}", refresh_token.user_id);
+        eprintln!("Originally used at: {:?}", refresh_token.used_at);
+
+        // Delete the token to prevent further reuse
+        // Force them to login again
+        state
+            .refresh_token_repository
+            .delete_all_user_tokens(refresh_token.user_id)
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+
+    // mark the old token as used (consumed)
     state
         .refresh_token_repository
-        .update_last_used(&payload.refresh_token)
+        .mark_token_as_used(&payload.refresh_token)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-    // Generate new access token
+    // generate new refresh token with rotation
+    let new_refresh_token = generate_refresh_token();
+
+    state
+        .refresh_token_repository
+        .create_token(refresh_token.user_id, &new_refresh_token)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // generate new access token
     let jwt_secret = std::env::var("JWT_SECRET").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     let access_token = generate_token(&refresh_token.user_id, &jwt_secret)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-    // Return new access token
-    Ok(Json(RefreshTokenResponse { access_token }))
+    // return both tokens
+    Ok(Json(RefreshTokenResponse {
+        access_token,
+        refresh_token: new_refresh_token,
+    }))
 }
