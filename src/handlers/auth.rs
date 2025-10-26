@@ -354,13 +354,30 @@ pub async fn refresh_token(
         eprintln!("User ID: {}", refresh_token.user_id);
         eprintln!("Originally used at: {:?}", refresh_token.used_at);
 
-        // Delete the token to prevent further reuse
-        // Force them to login again
+        // Delete ALL user's refresh tokens (force logout everywhere)
         state
             .refresh_token_repository
             .delete_all_user_tokens(refresh_token.user_id)
             .await
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+        // Get user info for email
+        let user = state
+            .user_repository
+            .find_by_id(refresh_token.user_id)
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+            .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
+
+        // Send security alert email
+        if let Err(e) = state
+            .email_service
+            .send_security_alert(&user.email, &user.username)
+            .await
+        {
+            eprintln!("Failed to send security alert email: {}", e);
+            // Don't fail the request if email fails
+        }
 
         return Err(StatusCode::UNAUTHORIZED);
     }
